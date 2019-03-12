@@ -1,0 +1,31 @@
+[input_files]
+  stfile = 'data_mth/scsn.stations'
+  plfile = 'data_mth/scsn.reverse'
+  fpfile = 'data_mth/north2.phase'
+  ampfile = 'data_mth/north3.amp'
+  corfile = 'data_mth/north3.statcor'
+
+[hash_parameters]
+  npolmin = 8
+  max_agap = 90
+  max_pgap = 60
+  dang = 5
+  nmc = 30
+  maxout = 500
+  badfrac = 0.1
+  delmax = 120
+  cangle = 45
+  prob_max = 0.25
+  ratmin   = 3.0  # Enter minimum allowed signal-to-noise ratio
+  qbadfrac = 0.3  # Enter the assumed noise in amplitude ratios, log10 (e.g. 0.3 for factor of 2)
+  # Booleans are just the tokens you're used to. Always lowercase.
+  use_amplitudes = true
+
+  num_vel_mods = 5
+  velocity_models = ['data_mth/vz.socal',
+                    'data_mth/vz.north',
+                    'data_mth/vz.lab1',
+                    'data_mth/vz.sgm1',
+                    'data_mth/vz.vb1'
+                   ]
+
