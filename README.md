@@ -1,8 +1,7 @@
 
-# instResp
+# hashwrap
 
-Collection of simple functions for creating/manipulating/plotting
-analog (=polezero) response stages of seismic/acoustic sensors.
+Wrap of HASHv1.2 Fortran library (see Hardebeck & Shearer, 2002)
 
 ## Getting Started
 
