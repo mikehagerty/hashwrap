@@ -1,0 +1,1 @@
+      parameter(dang0=5.0,ncoor=31032)

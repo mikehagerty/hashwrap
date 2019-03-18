@@ -1,8 +1,8 @@
 
 import numpy as np
 
-from hashpy.libhashpy import check_pol
-from hashpy.scripts.hash_utils import get_sta_coords
+from hashwrap.libhashpy import check_pol
+from hashwrap.hash_utils import get_sta_coords
 
 degrad = 180./np.pi
 
@@ -45,10 +45,18 @@ Example 1: north1.phase, Similar to FPFIT input file
   7         a1      polarity:U,u,+,D,d,or-
   8         i1      quality: 0=good quality, 1=lower quality, etc 
   59-62     f4.1    source-station distance (km)
-  66-68     i3      takeoff angle
+
+  ** MTH:  The following specs from HASH_manual_v1.2.pdf DO NOT MATCH north1.phase:
+  66-68     i3      takeoff angle 
   79-81     i3      azimuth
   83-85     i3      takeoff angle uncertainty ** NOT in standard FPFIT files
   87-89     i3      azimuth uncertainty ** NOT in standard FPFIT files
+
+  ** MTH:  Use these instead:
+  63-65     i3      takeoff angle 
+  75-78     i3      azimuth
+  81-83     i3      takeoff angle uncertainty ** NOT in standard FPFIT files
+  86-88     i3      azimuth uncertainty ** NOT in standard FPFIT files
 """
 
 
@@ -169,31 +177,25 @@ def read_fpfit_file(fpfile=None, plfile=None, stfile=None, delmax=120.,
                 pickpol   = ph[6]
                 p_qual    = int(ph[7])
                 qdist     = float(ph[58:62])/10.
-                ith       = int(ph[65:68])
-                # nskip=50
-                #ith       = int(ph[12+nskip:15+nskip])
-                #nskip += 10
-                #iaz       = int(ph[15+nskip:18+nskip])
-                iaz       = int(ph[78:81])
+                ith       = int(ph[62:65])
+                iaz       = int(ph[75:78])
 
                 if qdist > delmax:
-                    print("dist:%.1f > delmax(%.1f) --> Skip" % (qdist, delmax))
+                    #print("dist:%.1f > delmax(%.1f) --> Skip" % (qdist, delmax))
                     continue
                 if p_qual > 1:
-                    print("P qual [%d] > 1 --> Skip" % (p_qual))
+                    #print("P qual [%d] > 1 --> Skip" % (p_qual))
                     continue
 
                 try:
-                    nskip += 1
-                    #isthe     = int(ph[18+nskip:21+nskip])
-                    isthe     = int(ph[82:85])
-                    nskip += 1
-                    #isazi     = int(ph[21+nskip:24+nskip])
-                    isazi     = int(ph[86:89])
+                    isthe     = int(ph[80:83])
+                    isazi     = int(ph[85:88])
                 except ValueError as e:
-                    #print("isthe and/or isazi uncertainties NOT SET --> set to defaults!")
                     isthe = 10
                     isazi = 1
+
+                #print("sta:%s pickpol:%s p_qual:%s qdist:%.1f ith:%d iaz:%d isthe:%d isazi:%d" % \
+                     #(sname, pickpol, p_qual, qdist, ith, iaz, isthe, isazi))
 
                 if pickpol in 'Uu+':
                     p_pol = 1
@@ -205,7 +207,8 @@ def read_fpfit_file(fpfile=None, plfile=None, stfile=None, delmax=120.,
                 if plfile:
                     spol = check_pol(plfile,sname,iyr,imon,idy,ihr)
                     if spol < 0:
-                        print("MTH: flip polarity for sname=%s" % (sname))
+                        #print("MTH: flip polarity for sname=%s" % (sname))
+                        pass
                     p_pol *= spol
 
                 qazi=float(iaz)

@@ -1,0 +1,22 @@
+[input_files]
+  stfile = 'data/scsn.stations'
+  plfile = 'data/scsn.reverse'
+  fpfile = 'data/north1.phase'
+
+[hash_parameters]
+  npolmin = 8
+  max_agap = 90
+  max_pgap = 60
+  dang = 5
+  nmc = 30
+  maxout = 500
+  badfrac = 0.1
+  delmax = 120
+  cangle = 45
+  prob_max = 0.25
+  ratmin   = 3.0  # Enter minimum allowed signal-to-noise ratio
+  qbadfrac = 0.3  # Enter the assumed noise in amplitude ratios, log10 (e.g. 0.3 for factor of 2)
+  # Booleans are just the tokens you're used to. Always lowercase.
+  use_amplitudes = true
+
+  num_vel_mods = 5

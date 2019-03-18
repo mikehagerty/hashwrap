@@ -1,7 +1,7 @@
 
 from hashwrap.hash_utils import fortran_include, get_sta_coords, test_stereo
 
-from hashpy.libhashpy import (mk_table_add, angtable, ran_norm, get_tts, get_gap, check_pol,
+from hashwrap.libhashpy import (mk_table_add, angtable, ran_norm, get_tts, get_gap, check_pol,
                               focalmc, mech_prob, get_misf, focalamp_mc, get_misf_amp)
 
 from hashwrap.read_phase_formats import read_fpfit_file
@@ -9,6 +9,12 @@ from hashwrap.read_sp_ratios import read_sp_ratios
 
 import numpy as np
 import toml
+
+import logging
+logger = logging.getLogger()
+
+from pathlib import Path
+base_dir = Path(__file__).parent
 
 def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp=None):
     """
@@ -36,9 +42,13 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
 
     fname = 'calc_focal_mechanisms'
 
-    path = '/Users/mth/mth/python_pkgs/hashpy/hashpy/scripts/'
-    npick0, nmc0, nmax0 = fortran_include(path + 'data_mth/param.inc')
-    dang0, ncoor        = fortran_include(path + 'data_mth/rot.inc')
+    import sys, os
+
+    src_dir = os.path.join(base_dir, 'src')
+
+    npick0, nmc0, nmax0 = fortran_include(os.path.join(src_dir,'param.inc'))
+    dang0, ncoor        = fortran_include(os.path.join(src_dir,'rot.inc'))
+
 
     npolmin = hash_settings['npolmin']
     max_agap = hash_settings['max_agap']
@@ -114,8 +124,8 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
                     if iflag != 0:
                         print("%s: get_tts returned iflag=%d (should be 0 !)" % (fname, iflag))
 
-                print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   pol:[%d]" % \
-                    (k, sta, dist, qazi, p_the_mc[k,0], p_pol[k]))
+                #print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   pol:[%d]" % \
+                    #(k, sta, dist, qazi, p_the_mc[k,0], p_pol[k]))
 
 
             elif phase_format == 'FPFIT':
@@ -126,8 +136,8 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
                 p_azi_mc[k,0] = qazi
                 p_the_mc[k,0] = qthe
 
-                print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   pol:[%d]" % \
-                    (k, sta, dist, qazi, p_the_mc[k,0], p_pol[k]))
+                #print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   pol:[%d]" % \
+                    #(k, sta, dist, qazi, p_the_mc[k,0], p_pol[k]))
 
             # np.random.normal returns size=n randomly selected vals from normal distribution 
             # with mean=qazi(or qthe) and std=sazi(or sthe)
@@ -180,8 +190,8 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
                             print("%s: get_tts returned iflag=%d for SP ratio observation (should be 0 !)" \
                                   % (fname, iflag))
 
-                print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   sp_ratio:[%.2f]" % \
-                     (j, sta, dist, qazi, p_the_mc[j,0], sp_ratio[j]))
+                #print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   sp_ratio:[%.2f]" % \
+                     #(j, sta, dist, qazi, p_the_mc[j,0], sp_ratio[j]))
 
         npol = nppl + nspr
 
@@ -423,58 +433,89 @@ def write_outputs_to_file(fname, outputs):
     return
 
 
+# HashDriver1.f - reads in north1.phase = FPFIT format with takeoff/azim uncertainties added
+# HashDriver2.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info
+# HashDriver3.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info & reads in 
+#                       S/P_amp observations from north3.amp
+
+class Examples():
+
+    def __init__(self, **kwargs):
+        events = None
+        events_sp = None
+        outputs = None
+
+    def run_example(self, n, show_focal_plots=False):
+
+        sample_dir = os.path.join(base_dir, 'sample')
+
+        if n not in [1,2,3]:
+            logger.warn("hashwrapper.Examples.run_example(n=%s) --> n must be in [1,2,3]" % n)
+            return None
+
+        example_file = 'example%d.toml' % n
+        toml_file = os.path.join(sample_dir, example_file)
+        # Chek if toml_file exists
+
+        settings = toml.load(toml_file)
+        plfile = os.path.join(sample_dir, settings['input_files']['plfile'])
+        fpfile = os.path.join(sample_dir, settings['input_files']['fpfile'])
+        delmax = settings['hash_parameters']['delmax']
+
+    # Example 1
+        if n == 1:
+            events = read_fpfit_file(fpfile=fpfile, plfile=plfile, delmax=delmax)
+            outputs = calc_focal_mechanisms(events, settings['hash_parameters'], phase_format='FPFIT')
+
+    # Example 2, 3
+        elif n in [2, 3]:
+            stfile = os.path.join(sample_dir, settings['input_files']['stfile'])
+            events = read_fpfit_file(fpfile=fpfile, plfile=plfile, stfile=stfile, delmax=delmax,
+                                     fpfit_phase_format=2)
+
+            new_list = []
+            for fname in settings['hash_parameters']['velocity_models']:
+                new_list.append(os.path.join(sample_dir, fname))
+
+            settings['hash_parameters']['velocity_models'] = new_list
+
+            events_sp = None
+            if n == 3:
+                ampfile = os.path.join(sample_dir, settings['input_files']['ampfile'])
+                corfile = os.path.join(sample_dir, settings['input_files']['corfile'])
+                ratmin = settings['hash_parameters']['ratmin']
+                events_sp = read_sp_ratios(ampfile=ampfile,
+                                           corfile=corfile,
+                                           fpfit_events=events,
+                                           stfile=stfile,
+                                           ratmin=ratmin,
+                                           delmax=delmax)
+
+            outputs = calc_focal_mechanisms(events, settings['hash_parameters'],
+                                            phase_format='SCEDC',
+                                            events_sp=events_sp)
+
+        self.events = events
+        self.outputs = outputs
+        return outputs
+
 
 from obspy.core.event.source import FocalMechanism, NodalPlanes, NodalPlane
 from obspy.imaging.beachball import aux_plane
 from obspy.core.event.base import Comment
 
-# HashDriver1.f - reads in north1.phase = FPFIT format with takeoff/azim uncertainties added
-# HashDriver2.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info
-# HashDriver3.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info & reads in 
-#                       S/P_amp observations from north3.amp
+import sys, os
 def main():
-    settings = toml.load('hash.toml')
-    plfile = settings['input_files']['plfile']
-    stfile = settings['input_files']['stfile']
-    fpfile = settings['input_files']['fpfile']
 
-    ampfile = settings['input_files']['ampfile']
-    corfile = settings['input_files']['corfile']
-
-    delmax = settings['hash_parameters']['delmax']
-    ratmin = settings['hash_parameters']['ratmin']
-
-    run_example = 1
-    run_example = 2
-    run_example = 3
-    outfile = 'ex2.out'
-    outfile = 'ex3.out'
-
-    # Example 1
-    if run_example == 1:
-        events = read_fpfit_file(fpfile='data_mth/north1.phase', plfile=plfile, delmax=delmax)
-        outputs = calc_focal_mechanisms(events, settings['hash_parameters'], phase_format='FPFIT')
-
-    elif run_example in [2, 3]:
-
-    # Example 2
-        events = read_fpfit_file(fpfile=fpfile, plfile=plfile, stfile=stfile, delmax=delmax,
-                                fpfit_phase_format=2)
-
-    # Example 3
-        if run_example == 3:
-            events_sp = read_sp_ratios(ampfile=ampfile,
-                                       corfile=corfile,
-                                       fpfit_events=events,
-                                       stfile=stfile, plfile=plfile,
-                                       ratmin=ratmin, delmax=delmax)
-        else:
-            events_sp = None
-
-        outputs = calc_focal_mechanisms(events, settings['hash_parameters'], phase_format='SCEDC', events_sp=events_sp)
-
-    #write_outputs_to_file('ex3_amps.out', outputs)
-
+    #pathname = os.path.dirname(sys.argv[0])
+    #print('path =', pathname)
+    #print('full path =', os.path.abspath(pathname))
+    exs = Examples()
+    outputs = exs.run_example(3)
+    if outputs is not None:
+        for out in outputs:
+            print(out)
+    exit()
     write_outputs_to_file(outfile, outputs)
 
     exit()

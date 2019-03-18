@@ -1,0 +1,31 @@
+[fortran_array_dimensions]
+  [fortran_array_dimensions.param_inc]
+  #   parameter (npick0=500,nmc0=500,nmax0=500)
+    npick0 = 500
+    nmc0 = 500
+    nmax0 = 500
+  [fortran_array_dimensions.rot_inc]
+  #   parameter (dang0=5.0,ncoor=31032)
+    dang0 = 5.0
+    ncoor = 31032
+  [fortran_array_dimensions.vel_inc]
+  #   parameter(nx0=101,nd0=14,nindex=10)
+  #   parameter(dep1=0,dep2=39,dep3=3)
+  #   parameter(del1=0,del2=200,del3=2)
+  #   parameter(pmin=0,nump=9000)
+
+    [fortran_array_dimensions.vel_inc.line1]
+      nx0 = 101
+      nd0 = 14
+      nindex = 10
+    [fortran_array_dimensions.vel_inc.line2]
+      dep1 = 0
+      dep2 = 39
+      dep3 = 3
+    [fortran_array_dimensions.vel_inc.line3]
+      del1 = 0
+      del2 = 200
+      del3 = 2
+    [fortran_array_dimensions.vel_inc.line4]
+      pmin = 0
+      nump = 9000

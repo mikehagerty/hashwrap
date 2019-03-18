@@ -1,6 +1,6 @@
 import numpy as np
 
-from hashpy.scripts.hash_utils import get_sta_coords
+from hashwrap.hash_utils import get_sta_coords
 
 
 def read_sp_ratios(ampfile=None,
