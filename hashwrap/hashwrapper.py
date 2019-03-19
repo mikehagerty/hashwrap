@@ -8,15 +8,17 @@ from hashwrap.read_phase_formats import read_fpfit_file
 from hashwrap.read_sp_ratios import read_sp_ratios
 
 import numpy as np
+import sys, os
 import toml
 
 import logging
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 from pathlib import Path
 base_dir = Path(__file__).parent
 
-def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp=None):
+def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
+                          events_sp=None, logger_in=None):
     """
 
     :param events: list of event_dictionaries
@@ -42,7 +44,10 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
 
     fname = 'calc_focal_mechanisms'
 
-    import sys, os
+    global logger
+    if logger_in is not None:
+        logger = logger_in
+
 
     src_dir = os.path.join(base_dir, 'src')
 
@@ -122,7 +127,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
                     p_azi_mc[k,nm] = qazi
                     p_the_mc[k,nm], iflag = get_tts(index[nm],dist,qdep2[nm])
                     if iflag != 0:
-                        print("%s: get_tts returned iflag=%d (should be 0 !)" % (fname, iflag))
+                        logger.warn("%s: get_tts returned iflag=%d (should be 0 !)" % (fname, iflag))
 
                 #print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   pol:[%d]" % \
                     #(k, sta, dist, qazi, p_the_mc[k,0], p_pol[k]))
@@ -166,7 +171,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
                 pass
                 #print("%s: Add S/P Observations: evid:%d qdep:%.2f" % (fname, evt['icusp'], evt['qdep']))
             else:
-                print("evid:%d ==> Not Found in scedc phase input!" % (icusp))
+                logger.error("evid:%d ==> Not Found in scedc phase input!" % (icusp))
 
 
             for k,sta in enumerate(evt['sname']):
@@ -187,7 +192,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
                         p_azi_mc[j,nm] = qazi
                         p_the_mc[j,nm], iflag = get_tts(index[nm],dist,qdep2[nm])
                         if iflag != 0.:
-                            print("%s: get_tts returned iflag=%d for SP ratio observation (should be 0 !)" \
+                            logger.warn("%s: get_tts returned iflag=%d for SP ratio observation (should be 0 !)" \
                                   % (fname, iflag))
 
                 #print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   sp_ratio:[%.2f]" % \
@@ -195,23 +200,12 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
 
         npol = nppl + nspr
 
-        print("%s: icusp=[%d] npol:%d = nppl:%d + nspr:%d" % \
-              (fname, event['event']['icusp'], npol, nppl, nspr))
-
-
-        """
-        for k in range(npol):
-            for nm in range(nmc):
-                print("p_the_mc[%d][%d] = %.1f pol[%d]=%d sp[%d]=%.1f" % \
-                      (k, nm, p_the_mc[k, nm], k, p_pol[k], k, sp_ratio[k]))
-            print("\n")
-        exit()
-        """
-
+        logger.info("%s: icusp=[%d] npol:%d = nppl:%d + nspr:%d" % \
+                    (fname, event['event']['icusp'], npol, nppl, nspr))
 
         # stop if there aren't enough polarities
         if (npol < npolmin):
-            print("npol=%d < npolmin (%d) NOT Enough Polarities --> Skip" % (npol, npolmin))
+            logger.warn("npol=%d < npolmin (%d) NOT Enough Polarities --> Skip" % (npol, npolmin))
             #qual[0] = 'F'
             break
             #continue
@@ -224,8 +218,8 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
         magap,mpgap = get_gap(p_azi_mc[:npol,0],p_the_mc[:npol,0],npol)
 
         if ((magap > max_agap) or (mpgap > max_pgap)):
-            print("Azimuthal/takeoff gap too large !!!")
-            print("magap:%f max_agap:%f mpgap:%f max_pgap:%f" % (magap, max_agap, mpgap, max_pgap))
+            logger.warn("Azimuthal/takeoff gap too large !!!")
+            logger.warn("magap:%f max_agap:%f mpgap:%f max_pgap:%f" % (magap, max_agap, mpgap, max_pgap))
             #qual[0] = 'E'
             break
 
@@ -267,7 +261,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
 
         # MTH: decide what to do
         if nmult > 1:
-            print("************* cuspid=%d --> nmult=%d : Only returning First preferred solution" % (icusp, nmult))
+            logger.warn("%s: cuspid=%d --> nmult=%d : Only returning First preferred solution" % (fname, icusp, nmult))
             #exit()
 
         for imult in range(nmult):
@@ -335,7 +329,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT', events_sp
         outputs.append(out_dict)
 
 
-        print("\n\n")
+        #print("\n\n")
 
         #if icusp == 3146815:
             #test_stereo(p_azi_mc[:npol,0],p_the_mc[:npol,0],p_pol[:npol],sdr=[str_avg[0],dip_avg[0],rak_avg[0]])
@@ -512,16 +506,14 @@ def main():
     #print('full path =', os.path.abspath(pathname))
     exs = Examples()
     outputs = exs.run_example(3)
-    if outputs is not None:
-        for out in outputs:
-            print(out)
+    #if outputs is not None:
+        #for out in outputs:
+            #print(out)
     exit()
     write_outputs_to_file(outfile, outputs)
 
-    exit()
 
     for i,out in enumerate(outputs):
-        print("=== %d: Process Focal Mech" % i)
         p1 = NodalPlane(strike=out['strike'], dip=out['dip'], rake=out['rake'])
         s,d,r = aux_plane(out['strike'], out['dip'], out['rake'])
         p2 = NodalPlane(strike=s, dip=d, rake=r)
@@ -535,9 +527,6 @@ def main():
                             evaluation_status = 'preliminary',
                             comments = [Comment(text="HASH v1.2 Quality=[%s]" % out['quality'])]
                            )
-        print(fc)
-        print("Comment:%s" % fc.comments[0])
-        print()
 
 if __name__ == '__main__':
     main()
