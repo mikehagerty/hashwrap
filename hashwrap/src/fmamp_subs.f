@@ -71,7 +71,8 @@ c misfit arrays
       real qmis(ncoor)
       integer nmis(ncoor)
       integer irotgood(ncoor),irotgood2(ncoor)
-      
+
+c     print *,'FOCALAMP_MC: npsta=',npsta, ' nmc=', nmc
       pi=3.1415927
       degrad=180./pi
 
@@ -215,6 +216,8 @@ c  find misfit for each solution and minimum misfit
                  sp_ratio=log10(4.9*s_amp/p_amp)
                end if
                qmis(irot)=qmis(irot)+abs(sp_amp(ista)-sp_ratio)
+C              print 222, ista, sp_amp(ista), sp_ratio, s_amp, p_amp
+222     format(i2, 4x, f6.2, 4x, f6.2, 4x, f6.2, 4x, f6.2)
 
              end if
              if (p_pol(ista).ne.0) then
@@ -363,13 +366,19 @@ cf2py intent(out)  stdr
       real strike,dip,rake,mfrac,mavg,qcount,azi,toff,pol,wt,wo
       integer k,npol,p_pol(npol)
       real bb1(3),bb2(3),bb3(3)
-      
+
       rad=3.14159265/180.
 
       strike=str_avg*rad
       dip=dip_avg*rad
       rake=rak_avg*rad
-      
+c MTH: statements are in cols 7-72
+c        1         2         3         4         5         6         7
+c23456789012345678901234567890123456789012345678901234567890123456789012
+      write(*,222) 'Subroutine GETFIT_AMP: npol=',npol,' str=', str_avg,
+     + ' dip=', dip_avg,' rake=', rak_avg,' sp[12]=',sp_ratio(12)
+222   FORMAT(A,I3,A,F6.1,A,F5.1,A,F6.1,A,F5.2)
+
       M(1,1)=-sin(dip)*cos(rake)*sin(2*strike)-sin(2*dip)*sin(rake)*
      & sin(strike)*sin(strike)
       M(2,2)=sin(dip)*cos(rake)*sin(2*strike)-sin(2*dip)*sin(rake)*
@@ -384,7 +393,10 @@ cf2py intent(out)  stdr
       M(2,3)=-cos(dip)*cos(rake)*sin(strike)+cos(2*dip)*sin(rake)*
      & cos(strike)
       M(3,2)=M(2,3)
-      call FPCOOR(strike,dip,rake,bb3,bb1,1)
+c     print *, 'Call FPCOOR strike=',strike,' dip=',dip,' rake=',rake
+      call FPCOOR(str_avg,dip_avg,rak_avg,bb3,bb1,1)
+c MTH: FPCOOR expects s,d,r in degrees !!
+c     call FPCOOR(strike,dip,rake,bb3,bb1,1)
       call CROSS(bb3,bb1,bb2)
       
       mfrac=0.
@@ -394,12 +406,27 @@ cf2py intent(out)  stdr
       mavg=0.
       acount=0.
       
+
+c     print *, 'bb1:',bb1(1),bb1(2),bb1(3)
+c     print *, 'bb2:',bb2(1),bb2(2),bb2(3)
+c     print *, 'bb3:',bb3(1),bb3(2),bb3(3)
+
+c     return 
+c     end
+
       do 600 k=1,npol
+c MTH: TO_CAR returns the P-wave dir'n vector 
+c       = A&R (4.88) except z-comp sign is flipped!
+c       subroutine TO_CAR(the,phi,r,x,y,z)
           call TO_CAR(p_the_mc(k),p_azi_mc(k),1.,p_a1,
      &                p_a2,p_a3)
+c MTH: p_b1 = (P-wave dir'n vector -dot- slip vector)
+c     print *, 'k=',k,' p_dir:',p_a1,p_a2,p_a3
+
           p_b1= bb1(1)*p_a1
      &              +bb1(2)*p_a2
      &              +bb1(3)*p_a3 
+c MTH: p_b3 = (P-wave dir'n vector -dot- fault normal vector)
           p_b3= bb3(1)*p_a1
      &              +bb3(2)*p_a2
      &              +bb3(3)*p_a3
@@ -417,14 +444,19 @@ cf2py intent(out)  stdr
      &              +bb2(3)*p_proj3
           phi=atan2(pp_b2,pp_b1)
           theta=acos(p_b3)
+c     print *,'GETFIT_AMP: k=',k,' phi=',phi,
+c    +     ' theta=', theta
+
           p_amp=abs(sin(2*theta)*cos(phi))     
           wt=sqrt(p_amp)
           if (p_pol(k).ne.0) then
             azi=rad*p_azi_mc(k)
             toff=rad*p_the_mc(k)        
+c MTH: the P-wave direction unit vector x,y,z with z measured positive up (?)
             a(1)=sin(toff)*cos(azi)
             a(2)=sin(toff)*sin(azi)
             a(3)=-cos(toff)
+c MTH: b = DC moment tensor dotted with a
             do 615 in=1,3
               b(in)=0
               do 610 jn=1,3
@@ -448,11 +480,27 @@ cf2py intent(out)  stdr
             s2=-cos(theta)*sin(phi)
             s_amp=sqrt(s1*s1+s2*s2)
             sp_rat=log10(4.9*s_amp/p_amp)
+
 c        10        20        30        40        50        60        7
 c234567890123456789012345678901234567890123456789012345678901234567890
-c           print *,'Subroutine GETFIT_AMP: k=',k,' sp_ratio(k)=',
 c    +               sp_ratio(k), 'sp_rat=', sp_rat,' diff=',
-c    +               abs(sp_ratio(k)-sp_rat)
+c     write(*,333) 'GETFIT_AMP: k=',k,' sp_ratio(k)=',
+c    +   sp_ratio(k), 'sp_rat=', sp_rat,' p_amp:',
+c    +    p_amp, ' s_amp:', s_amp, ' diff:', abs(sp_ratio(k)-sp_rat)
+c    +    log10(s_amp/p_amp)
+c333   FORMAT(A,I3,A,F4.2,A,F4.2,A,F5.1,A,F5.1,A,F5.2)
+      write(*,333) 'GETFIT_AMP: k=',k,' th=',p_the_mc(k),' az=',
+     +      p_azi_mc(k),' sp_ratio(k)=', sp_ratio(k),
+     +   ' sp_rat=', sp_rat,' diff:', abs(sp_ratio(k)-sp_rat)
+333    FORMAT(A,I2,A,F5.1,A,F5.1,A,F4.2,A,F4.2,A,F5.2)
+c     write(*,444) 'GETFIT_AMP: k=',k,' sp_rat=', sp_rat,
+c    +   ' s_amp=',s_amp,' p_amp=', p_amp, ' s/p=',s_amp/p_amp
+444    FORMAT(A,I3,A,F4.2,A,F6.2,A,F6.2,A,F4.2)
+
+      write(*,555) 'GETFIT_AMP: k=',k,' th=',p_the_mc(k),' az=',
+     +      p_azi_mc(k),' p_amp=',p_amp,' s_amp=',s_amp
+
+555    FORMAT(A,I2,A,F5.1,A,F5.1,A,F4.2,A,F4.2)
 
             mavg=mavg+abs(sp_ratio(k)-sp_rat)
             acount=acount+1.0
@@ -466,6 +514,6 @@ c    +               abs(sp_ratio(k)-sp_rat)
        if (acount.eq.0.0) mavg=0.0
        stdr=stdr/scount
        if (scount.eq.0.0) stdr=0.0
-       
+
        return 
        end

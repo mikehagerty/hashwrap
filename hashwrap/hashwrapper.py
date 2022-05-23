@@ -1,6 +1,16 @@
 
 from hashwrap.hash_utils import fortran_include, get_sta_coords, test_stereo
 
+# MTH: fpfit format uses: get_gap
+# SCECDC format uses mk_table_add, get_tts
+# Not used: angtable
+# I'm calling
+# nf2,strike2,dip2,rake2,f1norm,f2norm = focalmc(p_azi_mc, p_the_mc, p_pol[:npol], p_qual[:npol], \
+#                                                nmc, dang2, nmax0, nextra, nmismax, npol)
+# initialize array:
+# p_qual    = np.empty(npick0, int, 'F')
+
+
 from hashwrap.libhashpy import (mk_table_add, angtable, ran_norm, get_tts, get_gap, check_pol,
                               focalmc, mech_prob, get_misf, focalamp_mc, get_misf_amp)
 
@@ -16,6 +26,41 @@ logger = logging.getLogger(__name__)
 
 from pathlib import Path
 base_dir = Path(__file__).parent
+
+"""
+n=1:
+    {'event_info': '1994-01-21 11:04 <34.242, -118.618> h:18.130000 [cusp id:3143312]',
+     'event': {'qlat': 34.2425, 'qlon': -118.61766666666666, 'qdep': 18.13, 'sez': 0.1, 'seh': 0.07, 'qmag': 2.3, 'icusp': 3143312},
+     'sname': ['IR2 ', 'SWM ', 'PYR ', 'ABL ', 'PTD ', 'GRH ', 'ECF ', 'BMT ', 'TPR ', ...],
+     'p_pol': [-1, -1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1,  ...],
+     'p_qual': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0,...],
+     'qdist': [25.8, 52.8, 37.9, 87.5, 31.7, 9.0, 49.7, 99.4, 16.9, 79.3, 74.6, 85.2,  ...],
+     'qthe': [59.0, 77.0, 70.0, 86.0, 65.0, 28.0, 76.0, 88.0, 46.0, 85.0, 84.0, 86.0, ... ],
+     'qazi': [51.0, 3.0, 342.0, 320.0, 213.0, 36.0, 299.0, 1.0, 171.0, 27.0, 340.0, 16.0, ],
+     'sazi': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,  ],
+     'sthe': [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0,     ]
+     }
+
+n=3:
+    {'event_info': '1994-01-21 11:04 <34.242, -118.618> h:18.130000 [cusp id:3143312]',
+     'event': {'qlat': 34.2425, 'qlon': -118.61766666666666, 'qdep': 18.13, 'sez': 0.1, 'seh': 0.07, 'qmag': 2.3, 'icusp': 3143312},
+     'sname': ['IR2 ', 'SWM ', 'PYR ', 'ABL ', 'PTD ', 'GRH ', 'ECF ', 'BMT ', 'TPR ',...],
+     'p_pol': [-1, -1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1,],
+     'p_qual': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+     'qdist': [25.756984544849747, 52.751684997681231, 37.937494881566955, 87.5035189492],
+     'qthe': [],
+     'qazi': [51.062977179834164, 3.4013358368950577, 342.48080481502177, 320.35792254532328, ],
+     'sazi': [],
+     'sthe': []
+     }
+  event_sp:
+    {'icusp': 2148509, 'qdep': 18.19,
+     'sname': ['GRH ', 'NHL ', 'SYL ', 'BRCY', 'BRCY', 'LA00', 'LA01', 'MPKP', 'MPKP', 'PIRU', 'SSAP', 'SSAP'],
+     'qazi': [36.526552059093056, 6.1539673242655368, 51.135672072610909, 10.891452669577944, ...],
+     'dist': [9.183394773200531, 16.755799433074717, 19.836517967480766, 7.443629427137548, 7.443629427137548...],
+     'sp_ratio': [0.86411110406841529, 1.4132236621873517, 1.9072366581109705, 1.0207011202256198, 1.2452378039915593,]}
+
+"""
 
 def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
                           events_sp=None, logger_in=None):
@@ -82,7 +127,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
 
 # initialize arrays
 
-    initialize_arrays(npick0, nmc0, nmax0)
+    #initialize_arrays(npick0, nmc0, nmax0)
 
     outputs = []
 
@@ -90,7 +135,28 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
 
     for event in events:
 
+        initialize_arrays(npick0, nmc0, nmax0)
+
         icusp = event['event']['icusp']
+        #print(event)
+
+        """
+NHL  ELZ CI    5.77   45.31      0.620      2.068      1.937     16.295
+SMF  ELZ CI  147.40   62.82      0.472      0.473      1.545      0.834
+BRCY EHZ NO   10.09   23.22      2.328      2.901     26.992     54.247
+CPCP EHZ NO  165.73   11.72      0.712      3.756     -2.314     13.117
+LA00 EHZ NO  135.25   53.15      0.163      1.749     -1.248     15.408
+LA01 EHZ NO  126.94   51.88      0.871      8.648      2.875     97.636
+SMIP EHZ NO  296.77   16.57      0.396      0.447     -6.291     19.795
+SMIP ELZ NO  296.77   16.57      0.086      0.123     -0.865      2.477
+        """
+        event_sp = None
+        if events_sp is not None:
+            for evt in events_sp:
+                if evt['icusp'] == icusp:
+                    event_sp = evt
+                    #print(event_sp)
+                    break
 
         sez = event['event']['sez']
 
@@ -127,7 +193,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
                     p_azi_mc[k,nm] = qazi
                     p_the_mc[k,nm], iflag = get_tts(index[nm],dist,qdep2[nm])
                     if iflag != 0:
-                        logger.warn("%s: get_tts returned iflag=%d (should be 0 !)" % (fname, iflag))
+                        logger.warning("%s: get_tts returned iflag=%d (should be 0 !)" % (fname, iflag))
 
                 #print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   pol:[%d]" % \
                     #(k, sta, dist, qazi, p_the_mc[k,0], p_pol[k]))
@@ -160,29 +226,16 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
         nppl = len(event['sname'])
 
         nspr = 0
-        if events_sp is not None:
-            found = False
-            for evt in events_sp:
-                if evt['icusp'] == icusp:
-                    found = True
-                    break
 
-            if found:
-                pass
-                #print("%s: Add S/P Observations: evid:%d qdep:%.2f" % (fname, evt['icusp'], evt['qdep']))
-            else:
-                logger.error("evid:%d ==> Not Found in scedc phase input!" % (icusp))
-
-
-            for k,sta in enumerate(evt['sname']):
-
-                sta = evt['sname'][k]
-                qazi = evt['qazi'][k]
-                dist = evt['dist'][k]
+        if event_sp:
+            #print("Loop over sp_ratio: %d amps" % len(event_sp['sp_ratio']))
+            for k in range(len(event_sp['sp_ratio'])):
 
                 j = k + nppl
-
-                sp_ratio[j] = evt['sp_ratio'][k]
+                sname[j]    = event_sp['sname'][k]
+                sp_ratio[j] = event_sp['sp_ratio'][k]
+                qazi        = event_sp['qazi'][k]
+                dist        = event_sp['dist'][k]
 
                 nspr += 1
 
@@ -192,20 +245,47 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
                         p_azi_mc[j,nm] = qazi
                         p_the_mc[j,nm], iflag = get_tts(index[nm],dist,qdep2[nm])
                         if iflag != 0.:
-                            logger.warn("%s: get_tts returned iflag=%d for SP ratio observation (should be 0 !)" \
+                            logger.warning("%s: get_tts returned iflag=%d for SP ratio observation (should be 0 !)" \
                                   % (fname, iflag))
 
-                #print("sname[%2d]:%4s dist:%6.1f   az:%6.1f   qthe:%4.1f   sp_ratio:[%.2f]" % \
-                     #(j, sta, dist, qazi, p_the_mc[j,0], sp_ratio[j]))
+                elif phase_format == 'FPFIT':
+                    #qthe = event['qthe'][k]
+                    #sthe = event['sthe'][k]    # Calculate nmc trial takeoff angles
+                    #sazi = event['sazi'][k]    # using input error estimates in theta and azi
+
+                    qthe = event_sp['qthe'][k]
+                    sthe = event_sp['sthe'][k]    # Calculate nmc trial takeoff angles
+                    sazi = event_sp['sazi'][k]    # using input error estimates in theta and azi
+                    if k < len(event['qthe']):
+                        if event['qthe'][k] != event_sp['qthe'][k]:
+                            logger.warning("k=%d event['sname']=%s qthe=%.2f -vs- event_sp['sname']=%s qthe=%.2f" %
+                                  (k, event['sname'][k], event['qthe'][k], event_sp['sname'][k], event_sp['qthe'][k]))
+
+                    p_azi_mc[j,0] = qazi
+                    p_the_mc[j,0] = qthe
+                    azims  = np.random.normal(loc=qazi, scale=sazi, size=nmc-1)
+                    thetas = np.random.normal(loc=qthe, scale=sthe, size=nmc-1)
+
+                    for nm in range(1,nmc):
+                        p_azi_mc[j,nm] = azims[nm-1]
+                        p_the_mc[j,nm] = thetas[nm-1]
+
 
         npol = nppl + nspr
 
         logger.info("%s: icusp=[%d] npol:%d = nppl:%d + nspr:%d" % \
                     (fname, event['event']['icusp'], npol, nppl, nspr))
 
+        logger.info(" i: sname    azi      the  pol   s/p")
+        for i in range(npol):
+            if i == nppl:
+                logger.info("=====================================================")
+            logger.info("%2d: %s %8.2f %8.2f %3d %6.3f" % (i, sname[i].decode("utf-8"), p_azi_mc[i,0], p_the_mc[i,0], p_pol[i], sp_ratio[i]))
+
+
         # stop if there aren't enough polarities
         if (npol < npolmin):
-            logger.warn("npol=%d < npolmin (%d) NOT Enough Polarities --> Skip" % (npol, npolmin))
+            logger.warning("%s: npol=%d < npolmin (%d) NOT Enough Polarities --> Skip" % (fname, npol, npolmin))
             #qual[0] = 'F'
             break
             #continue
@@ -218,8 +298,8 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
         magap,mpgap = get_gap(p_azi_mc[:npol,0],p_the_mc[:npol,0],npol)
 
         if ((magap > max_agap) or (mpgap > max_pgap)):
-            logger.warn("Azimuthal/takeoff gap too large !!!")
-            logger.warn("magap:%f max_agap:%f mpgap:%f max_pgap:%f" % (magap, max_agap, mpgap, max_pgap))
+            logger.warning("%s: Azimuthal/takeoff gap too large !!!", fname)
+            logger.warning("%s: magap:%f max_agap:%f mpgap:%f max_pgap:%f" % (fname, magap, max_agap, mpgap, max_pgap))
             #qual[0] = 'E'
             break
 
@@ -231,13 +311,20 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
 
         # find the set of acceptable focal mechanisms for all trials
 
+        logger.info("%s: nppl:%d badfrac:%f --> ntotal=nmismax:%d nextra:%d" % (fname, nppl, badfrac, nmismax, nextra))
+
         if use_amplitudes:
             # determine maximum acceptable number misfit polarities
             #nmismax = max(int(nppl * self.badfrac),2)        # nint
             #nextra  = max(int(nppl * self.badfrac * 0.5),2)  # nint
             qmismax = max(int(nspr * qbadfrac),2)        # nint
             qextra  = max(int(nspr * qbadfrac * 0.5),2)  # nint
+            logger.info("%s: nspr:%d qbadfrac:%f --> qmismax:%d" % (fname, nspr, qbadfrac, qmismax))
             # find the set of acceptable focal mechanisms for all trials
+            #for i in range(npol):
+                #print("%2d: %s %5.2f %5.2f %3d %6.3f" % (i, sname[i], p_azi_mc[i,0], p_the_mc[i,0], p_pol[i], sp_ratio[i]))
+
+            #exit()
             nf2,strike2,dip2,rake2,f1norm,f2norm = focalamp_mc(p_azi_mc, p_the_mc, sp_ratio[:npol], p_pol[:npol],\
                                                         nmc, dang2, nmax0, nextra, nmismax, qextra, qmismax, npol)
         else:
@@ -245,23 +332,35 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
             #nmismax = max(int(npol * badfrac),2)        # nint
             #nextra  = max(int(npol * badfrac * 0.5),2)  # nint
             # find the set of acceptable focal mechanisms for all trials
+
+            # MTH: nf2 = nfaults returned from FOCALMC --> will typically = nmax0 (e.g., 500) sampled
+            #            randomly from the nrot acceptable mechanisms FOCALMC finds
+
             nf2,strike2,dip2,rake2,f1norm,f2norm = focalmc(p_azi_mc, p_the_mc, p_pol[:npol], p_qual[:npol], \
                                                            nmc, dang2, nmax0, nextra, nmismax, npol)
 
 
-        #nf2,strike2,dip2,rake2,f1norm,f2norm = focalmc(p_azi_mc, p_the_mc, p_pol[:npol], p_qual[:npol], \
-                                                       #nmc, dang2, nmax0, nextra, nmismax, npol)
+        # nout2 will typically = nf2=nmax0=500
         nout2 = min(nmax0,nf2)  # number mechs returned from sub
+        # nout1 is not currently used
         nout1 = min(maxout,nf2) # number mechs to return
 
+        logger.debug("%s: nmax0:%d nf2:%d --> sub returned nout2:%d  maxout:%d --> return nout1:%d mechs" %
+                    (fname, nmax0,nf2, nout2, maxout, nout1))
+
         # find the probable mechanism from the set of acceptable solutions
+#      subroutine MECH_PROB(nf,norm1in,norm2in,cangle,prob_max,
+#                           nsltn,str_avg,dip_avg,rak_avg,prob,rms_diff)
+
         nmult,str_avg,dip_avg,rak_avg,prob,var_est = mech_prob(f1norm[:,:nout2], f2norm[:,:nout2], cangle,\
                                                                prob_max, nout2)
+
+        logger.info("%s: mech_prob(prob_max=%f nout2=%d) returned: nmult:%d" % (fname, prob_max, nout2, nmult))
 
 
         # MTH: decide what to do
         if nmult > 1:
-            logger.warn("%s: cuspid=%d --> nmult=%d : Only returning First preferred solution" % (fname, icusp, nmult))
+            logger.warning("%s: cuspid=%d --> nmult=%d : Only returning First preferred solution" % (fname, icusp, nmult))
             #exit()
 
         for imult in range(nmult):
@@ -271,18 +370,30 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
             #print(('cid = {0} {1}  mech = {2} {3} {4}'.format(icusp,imult,str_avg[imult],dip_avg[imult],rak_avg[imult])))
             # find misfit for prefered solution
 
+            mavge = "N/A"
             if use_amplitudes:
+                #print("npol=%d type(p_azi_mc)=%s p_azi_mc.size=%d" % (npol,type(p_azi_mc), p_azi_mc.size))
+                #for x in sp_ratio[:npol]:
+                    #print(x)
                 mfrac[imult], mavg[imult], stdr[imult] =  get_misf_amp(p_azi_mc[:npol,0], p_the_mc[:npol,0],
                                                                        sp_ratio[:npol], p_pol[:npol],
-                                                                       str_avg[imult], dip_avg[imult], rak_avg[imult],
-                                                                       npol)
+                                                                       str_avg[imult], dip_avg[imult], rak_avg[imult])
+                """
+                mfrac[imult], mavg[imult], stdr[imult] =  get_misf_amp(p_azi_mc[:npol,0], p_the_mc[:npol,0],
+                                                                       sp_ratio[:npol], p_pol[:npol],
+                                                                       109, 67, -86)
+            # MTH: Doesn't seem to matter if you pass in npol or not
+                                                                       #str_avg[imult], dip_avg[imult], rak_avg[imult],
+                                                                       #npol)
+                exit()
+                """
+                mavge = "%.2f" % mavg[imult]
 
             else:
                 mfrac[imult], stdr[imult] =  get_misf(p_azi_mc[:npol,0], p_the_mc[:npol,0],
                                                       p_pol[:npol], p_qual[:npol],
                                                       str_avg[imult], dip_avg[imult], rak_avg[imult],
                                                       npol)
-
 
             # solution quality rating  ** YOU MAY WISH TO DEVELOP YOUR OWN QUALITY RATING SYSTEM **
             if ((prob[imult] > 0.8) and (var_avg[imult] < 25) and (mfrac[imult] <= 0.15) and (stdr[imult] >= 0.5)):
@@ -293,6 +404,10 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
                 qual[imult]='C'
             else:
                 qual[imult]='D'
+
+            logger.info("%s: imult:%d str:%d dip:%d rake:%d rms_diff:%.2f prob:%.2f mfrac:%.2f mavg:%s stdr:%.2f Q:%s" %
+                        (fname, imult, round(str_avg[imult]), round(dip_avg[imult]), round(rak_avg[imult]),
+                                      var_avg[imult], prob[imult], mfrac[imult], mavge, stdr[imult], qual[imult].decode('UTF-8')))
 
             #print("Solution Quality:[%s]" % qual[imult])
 
@@ -319,6 +434,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
         if use_amplitudes:
             out_dict['S_P_log10_misfit'] = mavg[0]
             out_dict['number_SP_amp_ratios'] = nspr
+            out_dict['mavg'] = mavg[0]
 
         out_dict['number_P_polarities'] = nppl
         out_dict['station_polarity_count'] = npol  # Used by obspy npol = nppl + nspr
@@ -327,13 +443,6 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
         out_dict['rms_angle'] = rms_angle
 
         outputs.append(out_dict)
-
-
-        #print("\n\n")
-
-        #if icusp == 3146815:
-            #test_stereo(p_azi_mc[:npol,0],p_the_mc[:npol,0],p_pol[:npol],sdr=[str_avg[0],dip_avg[0],rak_avg[0]])
-            #exit()
 
     return outputs
 
@@ -390,13 +499,16 @@ def initialize_arrays(npick0, nmc0, nmax0):
     return
 
 
+from obspy.imaging.beachball import aux_plane
 def write_outputs_to_file(fname, outputs):
 
-    with open(fname, 'w') as f:
+    with open(fname, 'a') as f:
 
-        f.write("%6s  %3s %3s %3s %s %s %5s %5s %6s      Q  useAmp\n" % \
-                ("icusp", "str", "dip", "rke", 
-                 "agap", "pgap", "stdr", "msf", "rms_ang"))
+        f.write("%6s       %s       %3s %3s %3s [%3s %3s %3s]  %s %s %5s %5s %6s %5s %5s %5s    Q  useAmp\n" % \
+                ("icusp", "event_info", "str", "dip", "rke",
+                 "str2", "dip2", "rke2",
+                 "agap", "pgap", "stdr", "msf", "rms_ang", "npol", "nspr", "mavg"))
+                 #"agap", "pgap", "stdr", "msf", "rms_ang"))
 
         for out_dict in outputs:
             icusp = out_dict['icusp']
@@ -404,33 +516,76 @@ def write_outputs_to_file(fname, outputs):
             strike = out_dict['strike']
             dip = out_dict['dip']
             rake = out_dict['rake']
+            s2,d2,r2 = aux_plane(strike,dip,rake)
             magap = out_dict['azim_gap']
             mpgap = out_dict['theta_gap']
-            stdr = out_dict['stdr']
+
+            stdr = int(100. * out_dict['stdr'])
             misfit = out_dict['misfit']
             use_amplitudes = out_dict['use_amplitudes']
             useAmp = ''
+            nspr = 0
+            mavg = "N/A"
             if use_amplitudes:
                 S_P_log10_misfit = out_dict['S_P_log10_misfit']
                 nspr = out_dict['number_SP_amp_ratios']
                 useAmp = 'T'
+                mavg = "%5.2f" % out_dict['mavg']
 
-            nppl = out_dict['number_P_polarities']
-            npol = out_dict['station_polarity_count']
+            #nppl = out_dict['number_P_polarities']
+            #npol = out_dict['station_polarity_count']
+            npol = out_dict['number_P_polarities']
 
-            quality = out_dict['quality']
+            quality = out_dict['quality'].decode('UTF-8')
             rms_angle = out_dict['rms_angle']
-            f.write("%d %3d %3d %3d %.1f %.1f %5.3f %5.3f %6.2f [Q: %s] %1s\n" % \
-                (icusp, int(strike), int(dip), int(rake),
-                 magap, mpgap, stdr, misfit, rms_angle, quality, useAmp) )
+            #f.write("%d %3d %3d %3d %.1f %.1f %5.3f %5.3f %6.2f [Q: %s] %1s\n" % \
+            f.write("%d %s %3d %3d %3d  [%3d %3d %3d]    %.1f %.1f %5d %5.3f %6.2f %5d %5d %5s [Q: %s] %1s\n" % \
+                (icusp, out_dict['event_info'], int(strike), int(dip), int(rake),
+                 int(s2), int(d2), int(r2),
+                 magap, mpgap, stdr, misfit, rms_angle, npol, nspr, mavg, quality, useAmp) )
+
+            """
+            print(out_dict)
+            {'icusp': 3143312, 'event_info': '1994-01-21 11:04 <34.242, -118.618> h:18.130000 [cusp id:3143312]',
+             'strike': 134.27162, 'dip': 46.148907, 'rake': 141.08693, 'azim_gap': 83, 'theta_gap': 17, 'stdr': 0.66864567995071411,
+             'misfit': 0.087592080235481262, 'use_amplitudes': True, 'S_P_log10_misfit': 0.64114588499069214, 'number_SP_amp_ratios': 7,
+             'number_P_polarities': 30, 'station_polarity_count': 37, 'quality': b'A', 'rms_angle': 14.474512100219727}
+            exit()
+            """
 
     return
 
 
-# HashDriver1.f - reads in north1.phase = FPFIT format with takeoff/azim uncertainties added
-# HashDriver2.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info
-# HashDriver3.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info & reads in 
-#                       S/P_amp observations from north3.amp
+"""
+HashDriver1.f - reads in north1.phase = FPFIT format with takeoff/azim uncertainties added
+                In example 1, we assume that we have already computed the azimuth and takeoff angle to each station,
+                and have estimated the uncertainty of both of these angles. The input format (file: north1.phase) is
+                a modified version of the standard FPFIT input format, expanded to include the azimuth and takeoff angle
+                uncertainties. In this case much of the data can be read directly into the input arrays. The azimuth
+                and takeoff angle for each trial are computed by randomly selecting values from normal distributions
+                with the given average value and standard deviation.
+
+HashDriver2.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info
+                In example 2, we assume that we don’t have a good idea of the uncertainty in the azimuth and takeoff angles.
+                A 1D ray-tracing routine is used to compute the takeoff angles for plausible velocity models 
+                (the azimuth to a station is the same for any 1D model.) Each trial uses a different combination of
+                (gradient) velocity model and perturbed source depth to compute a set of takeoff angles.
+                Because the azimuth and takeoff angle to each station is being computed, a file with station names and
+                locations is needed (file: scsn.stations)
+
+HashDriver3.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim info & reads in S/P_amp observations from north3.amp
+                In example 3, S/P amplitude ratios are also used. An additional input file with the P and S amplitudes,
+                as well as the noise levels prior to the arrival of the P and S waves, is included (file: north3.amp.)
+                We apply a station correction of a constant shift in log10(S/P) (Hardebeck & Shearer, 2003), and
+                therefore need to input a file with these corrections (file: north3.statcor)
+
+                Two additional control parameters are also needed. We limit the S/P observations to those waveforms with
+                signal to noise ratio of at least ratmin. In order to estimate the allowed log10(S/P) misfit
+                (qextra and qtotal, above), an estimate of the log10(S/P) uncertainty is given by qbadfrac. For this example,
+                it is very important that each event have a unique ID number, as the ID is used to match the P-polarity and
+                S/P amplitudes from different files.
+
+"""
 
 class Examples():
 
@@ -444,7 +599,7 @@ class Examples():
         sample_dir = os.path.join(base_dir, 'sample')
 
         if n not in [1,2,3]:
-            logger.warn("hashwrapper.Examples.run_example(n=%s) --> n must be in [1,2,3]" % n)
+            logger.warning("hashwrapper.Examples.run_example(n=%s) --> n must be in [1,2,3]" % n)
             return None
 
         example_file = 'example%d.toml' % n
@@ -504,13 +659,22 @@ def main():
     #pathname = os.path.dirname(sys.argv[0])
     #print('path =', pathname)
     #print('full path =', os.path.abspath(pathname))
+    n = 1
+    n = 2
+    n = 3
     exs = Examples()
-    outputs = exs.run_example(3)
-    #if outputs is not None:
-        #for out in outputs:
-            #print(out)
-    exit()
+    outputs = exs.run_example(n)
+    outfile = 'mth_outputfile.%d' % n
     write_outputs_to_file(outfile, outputs)
+    exit()
+
+   # if outputs is not None:
+        #for out in outputs:
+            #print(out['strike'], out['dip'], out['rake'])
+            #s,d,r = aux_plane(out['strike'], out['dip'], out['rake'])
+            #print(s,d,r)
+            #exit()
+            #print(out)
 
 
     for i,out in enumerate(outputs):

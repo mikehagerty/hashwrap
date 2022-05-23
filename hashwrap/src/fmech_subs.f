@@ -66,7 +66,6 @@ c fit arrays
       integer irotgood(ncoor),irotgood2(ncoor)
       real fran
 
-c     print *,'Subroutine FOCALMC: npsta=',npsta
 
       pi=3.1415927
       degrad=180./pi
@@ -188,12 +187,19 @@ c choose fit criteria
             nmissmax=nmiss01min(nmiss0min)+nextra
          end if
 
+c MTH: why not just fix max number of misfits allowed ?
+c        nmissmax = ntotal
+c        nmiss0max = ntotal
+
 c loop over rotations - find those meeting fit criteria
+c        print *,'Loop over rotns: nmiss0max=',nmiss0max,
+c    +           ' nmissmax=',nmissmax
          do 440 irot=1,nrot        
             nmiss0=fit(1,irot)
             nmiss=fit(2,irot)
             if ((nmiss0.le.nmiss0max).and.(nmiss.le.nmissmax)) then
               irotgood(irot)=1
+c             print *,'irot=',irot,' nmiss0=',nmiss0,' and nmiss=',nmiss
             end if
 440     continue
 
@@ -206,7 +212,11 @@ c loop over rotations - find those meeting fit criteria
             irotgood2(nfault)=irot
           end if
         end do
- 
+
+      write(*,100) 'FOCALMC: npsta=', npsta, ' nmc=', nmc,
+     +             ' maxout=', maxout, ' nrot=', nrot, ' nfault=',nfault
+100   format(A,I3,A,I3,A,I4,A,I6,A,I5)
+
 c  Select output solutions  
         nf=0      
         if (nfault.le.maxout) then

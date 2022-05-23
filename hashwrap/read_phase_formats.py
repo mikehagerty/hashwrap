@@ -59,6 +59,16 @@ Example 1: north1.phase, Similar to FPFIT input file
   86-88     i3      azimuth uncertainty ** NOT in standard FPFIT files
 """
 
+'''
+  94 1211104155034 1455118 3706 181323 31  0  0   1                  23              7  10                                           3143312 230
+           1         2         3         4         5         6         7         8         9        100
+ 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+  IR2 IPD0                   0                               258121           51  10   1     X   VHZ
+  SWM IPU0                   0                               528103            3  10   1     X   VHZ
+  PYR IPU0                   0                               379110          342  10   1     X   VHZ
+  SSN EPU1                   0                              1378 86          216  10   1     X   VHZ
+'''
+
 
 def read_fpfit_file(fpfile=None, plfile=None, stfile=None, delmax=120.,
                     fpfit_phase_format=1):
@@ -82,6 +92,7 @@ def read_fpfit_file(fpfile=None, plfile=None, stfile=None, delmax=120.,
     """
 
     fname = "read_fpfit_file"
+    print("%s: fpfit_format:%d" % (fname, fpfit_phase_format))
 
     if fpfit_phase_format == 2:
         if stfile is not None:
@@ -143,6 +154,7 @@ def read_fpfit_file(fpfile=None, plfile=None, stfile=None, delmax=120.,
             if ('E' in cew):
                 qlon *= -1
 
+
             print("MTH: Process event: %4d-%02d-%02d %02d:%02d <%.3f, %.3f> h:%f [cusp id:%d]" % \
                 (iyr, imon, idy, ihr, imn, qlat, qlon, qdep, icusp))
 
@@ -179,12 +191,13 @@ def read_fpfit_file(fpfile=None, plfile=None, stfile=None, delmax=120.,
                 qdist     = float(ph[58:62])/10.
                 ith       = int(ph[62:65])
                 iaz       = int(ph[75:78])
+                #print("MTH: sname:%s pickpol:%s p_qual:%s qdist:%f" % (sname, pickpol,p_qual,qdist))
 
                 if qdist > delmax:
-                    #print("dist:%.1f > delmax(%.1f) --> Skip" % (qdist, delmax))
+                    print("sname:%s dist:%.1f > delmax(%.1f) --> Skip" % (sname, qdist, delmax))
                     continue
                 if p_qual > 1:
-                    #print("P qual [%d] > 1 --> Skip" % (p_qual))
+                    print("sname:%s P qual [%d] > 1 --> Skip" % (sname, p_qual))
                     continue
 
                 try:
@@ -363,8 +376,10 @@ def read_fpfit_file_2(fpfile=None, plfile=None, stfile=None, delmax=120.):
 
             aspect = np.cos(qlat*np.pi/180.)
 
+            npol_lines = 0
             while True:
                 ph = f.readline()
+                npol_lines += 1
                 sname     = ph[0:4]
                 if not sname.strip():
                     #print("MTH: Encountered empty sta_code --> break")
@@ -385,6 +400,8 @@ def read_fpfit_file_2(fpfile=None, plfile=None, stfile=None, delmax=120.):
                     p_qual = 0
                 else:
                     p_qual = 1
+                    #print("pickonset:%s ==> Skip" % pickonset)
+                    continue
 
                 #print("sta:%s net:%s comp:%s pickonset:%s pickpol:%s [p_pol:%d]" % \
                     #(sname, snet, scomp, pickonset, pickpol, p_pol))
@@ -430,6 +447,7 @@ def read_fpfit_file_2(fpfile=None, plfile=None, stfile=None, delmax=120.):
             event_dict['sthe'] = sthe_list
 
             events.append(event_dict)
+            print("read_phase icusp:%d npha:%d nkeep:%d" % (icusp, npol_lines, len(p_pol_list)))
 
     return events
 
@@ -487,6 +505,8 @@ def read_fpfit_file_4(fpfile=None, plfile=None, stfile=None, delmax=120.):
 
     sta_coords = get_sta_coords(stfile)
 
+    print("MTH: read from fpfile:%s" % fpfile)
+    exit()
     with open(fpfile) as f:
         while True:
             line = f.readline()
@@ -536,7 +556,6 @@ def read_fpfit_file_4(fpfile=None, plfile=None, stfile=None, delmax=120.):
             event_dict['event']['seh'] = seh
             event_dict['event']['qmag'] = qmag
             event_dict['event']['icusp'] = icusp
-
 
             sname_list = []
             p_pol_list = []
@@ -588,8 +607,8 @@ def read_fpfit_file_4(fpfile=None, plfile=None, stfile=None, delmax=120.):
                 if (qazi < 0.):
                     qazi = qazi + 360.
                 if (dist > delmax):
-                    #print("dist=%.1f > delmax=%.1f --> Skip" % (dist, delmax))
-                    continue
+                    print("dist=%.1f > delmax=%.1f --> Skip" % (dist, delmax))
+                    #continue
 
                 if plfile:
                     spol = check_pol(plfile,sname,iyr,imon,idy,ihr)
