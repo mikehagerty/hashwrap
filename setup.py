@@ -6,7 +6,8 @@ import os
 # By importing setuptools *before* numpy.distutils.core
 #  numpy will fork and use the (more modern) setuptools
 import setuptools
-from numpy.distutils.core import setup, Extension
+#from numpy.distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 # MTH: 2019
 # This project was forked from Marc William's hashpy at:
@@ -67,6 +68,7 @@ requirements = [
     'numpy',
     'matplotlib',
     'toml',
+    #'toml==0.10.2',
 ]
 
 setup(name='hashwrap',
@@ -81,6 +83,7 @@ setup(name='hashwrap',
       package_data={'hashwrap': ['*.toml', 'src/*', 'docs/*', 'sample/*', 'sample/data/*']},
       include_package_data=True,
       install_requires=requirements,
+      setup_requires=requirements,
       ext_modules=[Extension('hashwrap.libhashpy', **ext_args)],
       classifiers=(
           "Programming Language :: Python :: 3.7",
