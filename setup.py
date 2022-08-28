@@ -6,8 +6,8 @@ import os
 # By importing setuptools *before* numpy.distutils.core
 #  numpy will fork and use the (more modern) setuptools
 import setuptools
-#from numpy.distutils.core import setup, Extension
-from setuptools import setup, Extension
+from numpy.distutils.core import setup, Extension
+#from setuptools import setup, Extension
 
 # MTH: 2019
 # This project was forked from Marc William's hashpy at:
