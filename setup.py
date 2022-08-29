@@ -7,7 +7,14 @@ import os
 #  numpy will fork and use the (more modern) setuptools
 import setuptools
 from numpy.distutils.core import setup, Extension
-#from setuptools import setup, Extension
+
+# MTH: 2020
+# As of numpy v1.23, building gives a warning that 
+# numpy.distutils is deprecated and will be going away
+# around when python 3.12 comes out.  However, at this time
+# there doesn't seem to be any replacement - e.g, using
+# setup from setuptools requires that the extenstion already
+# be built (e.g., using cmake or meson).
 
 # MTH: 2019
 # This project was forked from Marc William's hashpy at:
@@ -62,13 +69,16 @@ srcdir = os.path.join('hashwrap', 'src')
 srcf = ['fmamp_subs.f', 'fmech_subs.f', 'uncert_subs.f', 'util_subs.f',
         'pol_subs.f', 'vel_subs.f', 'station_subs.f', 'vel_subs2.f']
 src_list = [os.path.join(srcdir, src) for src in srcf]
-ext_args = {'sources': src_list}
+#ext_args = {'sources': src_list}
+# MTH: 2020 as of latest numpy 1.23, have to pass on c99 
+# since f2py initializes ints inside of for loop: for (int i=0...)
+ext_args = {'sources': src_list,
+            'extra_c_compile_args': ['-std=c99']}
 
 requirements = [
     'numpy',
     'matplotlib',
     'toml',
-    #'toml==0.10.2',
 ]
 
 setup(name='hashwrap',
@@ -83,7 +93,6 @@ setup(name='hashwrap',
       package_data={'hashwrap': ['*.toml', 'src/*', 'docs/*', 'sample/*', 'sample/data/*']},
       include_package_data=True,
       install_requires=requirements,
-      setup_requires=requirements,
       ext_modules=[Extension('hashwrap.libhashpy', **ext_args)],
       classifiers=(
           "Programming Language :: Python :: 3.7",
