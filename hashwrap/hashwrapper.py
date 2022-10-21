@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Python wrapper around HASH focalmech code,
+for use with AQMS db
+
+:copyright:
+    Mike Hagerty (m.hagerty@isti.com), 2022
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+"""
+
 
 from hashwrap.hash_utils import fortran_include, get_sta_coords, test_stereo
 
