@@ -8,6 +8,15 @@ import os
 import setuptools
 from numpy.distutils.core import setup, Extension
 
+# clean house
+from distutils.dir_util import remove_tree
+#remove_tree('build')
+import shutil
+shutil.rmtree('build', ignore_errors=True)
+libfile = 'hashwrap/libhashpy.cpython-39-darwin.so'
+if os.path.exists(libfile):
+    os.remove(libfile)
+
 # MTH: 2020
 # As of numpy v1.23, building gives a warning that 
 # numpy.distutils is deprecated and will be going away
@@ -54,12 +63,28 @@ def write_inc_files(inc_dict, filename):
 
     return
 
+# Read in any params from ENV and use to override default 
+#    toml settings
+env_params = {}
+for param in ['npick0', 'nmc0', 'nmax0', 'dang0', 'ncoor']:
+    env_params[param] = os.getenv(param)
+    if env_params[param] is None:
+        env_params[param] = os.getenv(param.upper())
+
 import toml
 settings = toml.load('hashwrap/fortran_arrays.toml')['fortran_array_dimensions']
+
+for section,d in settings.items():
+    print("settings.section:%s" % section)
+    for k,v in d.items():
+        val = os.getenv(k)
+        if val:
+            print(" >>override param=%s from env val=%s" % (k, val))
+            settings[section][k] = val
+
 write_inc_files(settings['param_inc'], 'hashwrap/src/param.inc')
 write_inc_files(settings['rot_inc'], 'hashwrap/src/rot.inc')
 write_inc_files(settings['vel_inc'], 'hashwrap/src/vel.inc')
-
 
 #--- libhashpy Fortran extension --------------------------------------------#
 #
@@ -94,6 +119,7 @@ setup(name='hashwrap',
       include_package_data=True,
       install_requires=requirements,
       ext_modules=[Extension('hashwrap.libhashpy', **ext_args)],
+      #ext_modules=[Extension('hashwrap.libhashwrap', **ext_args)],
       classifiers=(
           "Programming Language :: Python :: 3.7",
           "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

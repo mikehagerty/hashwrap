@@ -4,6 +4,7 @@
 # Based on HASH Makefile
 
 #SRC=    fmech_subs.f uncert_subs.f util_subs.f \
+
 SRC=    fmamp_subs.f fmech_subs.f uncert_subs.f util_subs.f \
         pol_subs.f vel_subs.f station_subs.f vel_subs2.f
 

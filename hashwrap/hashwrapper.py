@@ -8,20 +8,12 @@ for use with AQMS db
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
+
+Originally forked from Mark Williams' HASHPy 2013
 """
 
 
 from hashwrap.hash_utils import fortran_include, get_sta_coords, test_stereo
-
-# MTH: fpfit format uses: get_gap
-# SCECDC format uses mk_table_add, get_tts
-# Not used: angtable
-# I'm calling
-# nf2,strike2,dip2,rake2,f1norm,f2norm = focalmc(p_azi_mc, p_the_mc, p_pol[:npol], p_qual[:npol], \
-#                                                nmc, dang2, nmax0, nextra, nmismax, npol)
-# initialize array:
-# p_qual    = np.empty(npick0, int, 'F')
-
 
 from hashwrap.libhashpy import (mk_table_add, angtable, ran_norm, get_tts, get_gap, check_pol,
                               focalmc, mech_prob, get_misf, focalamp_mc, get_misf_amp)
@@ -39,40 +31,6 @@ logger = logging.getLogger(__name__)
 from pathlib import Path
 base_dir = Path(__file__).parent
 
-"""
-n=1:
-    {'event_info': '1994-01-21 11:04 <34.242, -118.618> h:18.130000 [cusp id:3143312]',
-     'event': {'qlat': 34.2425, 'qlon': -118.61766666666666, 'qdep': 18.13, 'sez': 0.1, 'seh': 0.07, 'qmag': 2.3, 'icusp': 3143312},
-     'sname': ['IR2 ', 'SWM ', 'PYR ', 'ABL ', 'PTD ', 'GRH ', 'ECF ', 'BMT ', 'TPR ', ...],
-     'p_pol': [-1, -1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1,  ...],
-     'p_qual': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0,...],
-     'qdist': [25.8, 52.8, 37.9, 87.5, 31.7, 9.0, 49.7, 99.4, 16.9, 79.3, 74.6, 85.2,  ...],
-     'qthe': [59.0, 77.0, 70.0, 86.0, 65.0, 28.0, 76.0, 88.0, 46.0, 85.0, 84.0, 86.0, ... ],
-     'qazi': [51.0, 3.0, 342.0, 320.0, 213.0, 36.0, 299.0, 1.0, 171.0, 27.0, 340.0, 16.0, ],
-     'sazi': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,  ],
-     'sthe': [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0,     ]
-     }
-
-n=3:
-    {'event_info': '1994-01-21 11:04 <34.242, -118.618> h:18.130000 [cusp id:3143312]',
-     'event': {'qlat': 34.2425, 'qlon': -118.61766666666666, 'qdep': 18.13, 'sez': 0.1, 'seh': 0.07, 'qmag': 2.3, 'icusp': 3143312},
-     'sname': ['IR2 ', 'SWM ', 'PYR ', 'ABL ', 'PTD ', 'GRH ', 'ECF ', 'BMT ', 'TPR ',...],
-     'p_pol': [-1, -1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1,],
-     'p_qual': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-     'qdist': [25.756984544849747, 52.751684997681231, 37.937494881566955, 87.5035189492],
-     'qthe': [],
-     'qazi': [51.062977179834164, 3.4013358368950577, 342.48080481502177, 320.35792254532328, ],
-     'sazi': [],
-     'sthe': []
-     }
-  event_sp:
-    {'icusp': 2148509, 'qdep': 18.19,
-     'sname': ['GRH ', 'NHL ', 'SYL ', 'BRCY', 'BRCY', 'LA00', 'LA01', 'MPKP', 'MPKP', 'PIRU', 'SSAP', 'SSAP'],
-     'qazi': [36.526552059093056, 6.1539673242655368, 51.135672072610909, 10.891452669577944, ...],
-     'dist': [9.183394773200531, 16.755799433074717, 19.836517967480766, 7.443629427137548, 7.443629427137548...],
-     'sp_ratio': [0.86411110406841529, 1.4132236621873517, 1.9072366581109705, 1.0207011202256198, 1.2452378039915593,]}
-
-"""
 
 def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
                           events_sp=None, logger_in=None):
@@ -145,6 +103,7 @@ def calc_focal_mechanisms(events, hash_settings, phase_format='FPFIT',
 
 # List of events, each is an event_dict with lists of polarity, azi, the, etc
 
+    #print("Initialize arrays: npick0=%d nmc0=%d nmax0=%d" % (npick0, nmc0, nmax0))
     for event in events:
 
         initialize_arrays(npick0, nmc0, nmax0)
@@ -455,6 +414,7 @@ SMIP ELZ NO  296.77   16.57      0.086      0.123     -0.865      2.477
         out_dict['rms_angle'] = rms_angle
 
         outputs.append(out_dict)
+        #print("append icusp:%s to outputs" % icusp)
 
     return outputs
 
@@ -511,62 +471,6 @@ def initialize_arrays(npick0, nmc0, nmax0):
     return
 
 
-from obspy.imaging.beachball import aux_plane
-def write_outputs_to_file(fname, outputs):
-
-    with open(fname, 'a') as f:
-
-        f.write("%6s       %s       %3s %3s %3s [%3s %3s %3s]  %s %s %5s %5s %6s %5s %5s %5s    Q  useAmp\n" % \
-                ("icusp", "event_info", "str", "dip", "rke",
-                 "str2", "dip2", "rke2",
-                 "agap", "pgap", "stdr", "msf", "rms_ang", "npol", "nspr", "mavg"))
-                 #"agap", "pgap", "stdr", "msf", "rms_ang"))
-
-        for out_dict in outputs:
-            icusp = out_dict['icusp']
-            #out_dict['event_info'] = event['event_info']
-            strike = out_dict['strike']
-            dip = out_dict['dip']
-            rake = out_dict['rake']
-            s2,d2,r2 = aux_plane(strike,dip,rake)
-            magap = out_dict['azim_gap']
-            mpgap = out_dict['theta_gap']
-
-            stdr = int(100. * out_dict['stdr'])
-            misfit = out_dict['misfit']
-            use_amplitudes = out_dict['use_amplitudes']
-            useAmp = ''
-            nspr = 0
-            mavg = "N/A"
-            if use_amplitudes:
-                S_P_log10_misfit = out_dict['S_P_log10_misfit']
-                nspr = out_dict['number_SP_amp_ratios']
-                useAmp = 'T'
-                mavg = "%5.2f" % out_dict['mavg']
-
-            #nppl = out_dict['number_P_polarities']
-            #npol = out_dict['station_polarity_count']
-            npol = out_dict['number_P_polarities']
-
-            quality = out_dict['quality'].decode('UTF-8')
-            rms_angle = out_dict['rms_angle']
-            #f.write("%d %3d %3d %3d %.1f %.1f %5.3f %5.3f %6.2f [Q: %s] %1s\n" % \
-            f.write("%d %s %3d %3d %3d  [%3d %3d %3d]    %.1f %.1f %5d %5.3f %6.2f %5d %5d %5s [Q: %s] %1s\n" % \
-                (icusp, out_dict['event_info'], int(strike), int(dip), int(rake),
-                 int(s2), int(d2), int(r2),
-                 magap, mpgap, stdr, misfit, rms_angle, npol, nspr, mavg, quality, useAmp) )
-
-            """
-            print(out_dict)
-            {'icusp': 3143312, 'event_info': '1994-01-21 11:04 <34.242, -118.618> h:18.130000 [cusp id:3143312]',
-             'strike': 134.27162, 'dip': 46.148907, 'rake': 141.08693, 'azim_gap': 83, 'theta_gap': 17, 'stdr': 0.66864567995071411,
-             'misfit': 0.087592080235481262, 'use_amplitudes': True, 'S_P_log10_misfit': 0.64114588499069214, 'number_SP_amp_ratios': 7,
-             'number_P_polarities': 30, 'station_polarity_count': 37, 'quality': b'A', 'rms_angle': 14.474512100219727}
-            exit()
-            """
-
-    return
-
 
 """
 HashDriver1.f - reads in north1.phase = FPFIT format with takeoff/azim uncertainties added
@@ -599,12 +503,20 @@ HashDriver3.f - reads in north2.phase = SCEDC format (?) with no takeoff/azim in
 
 """
 
+from obspy.imaging.beachball import aux_plane
+
 class Examples():
 
     def __init__(self, **kwargs):
         events = None
         events_sp = None
         outputs = None
+
+    def __repr__(self):
+        return '{0}'.format(self.__class_.__name__)
+
+    def printout(self, maxrows=None, filename=None):
+        return printout(self.outputs, maxrows, filename)
 
     def run_example(self, n, show_focal_plots=False):
 
@@ -658,7 +570,70 @@ class Examples():
 
         self.events = events
         self.outputs = outputs
-        return outputs
+        #return outputs
+
+
+def printout(outputs, maxrows=None, filename=None):
+
+    usage = "Usage: printout([maxrows : default=10, use 'all' to get all rows], [filename : default=stdout]"
+
+    if maxrows is None:
+        if filename is None:
+            maxrows = 10   # first 10 rows to stdout
+        else:              # all to file
+            maxrows = len(outputs)
+    elif maxrows=='all':
+        maxrows = len(outputs)
+
+    try:
+        n = int(maxrows)
+    except ValueError as e:
+        print(usage)
+        return
+
+    if filename is None:
+        filename = "/dev/tty"
+    with open(filename, 'a') as f:
+        f.write("%6s %66s %3s %3s %3s [%3s %3s %3s]  %s %s %5s %5s %6s %5s %5s %5s    Q  useAmp\n" % \
+                ("icusp", "event_info", "str", "dip", "rke",
+                 "str2", "dip2", "rke2",
+                 "agap", "pgap", "stdr", "msf", "rms_ang", "npol", "nspr", "mavg"))
+
+        for out_dict in outputs[:n]:
+            icusp = out_dict['icusp']
+            #out_dict['event_info'] = event['event_info']
+            strike = out_dict['strike']
+            dip = out_dict['dip']
+            rake = out_dict['rake']
+            s2,d2,r2 = aux_plane(strike,dip,rake)
+            magap = out_dict['azim_gap']
+            mpgap = out_dict['theta_gap']
+
+            stdr = int(100. * out_dict['stdr'])
+            misfit = out_dict['misfit']
+            use_amplitudes = out_dict['use_amplitudes']
+            useAmp = ''
+            nspr = 0
+            mavg = "N/A"
+            if use_amplitudes:
+                S_P_log10_misfit = out_dict['S_P_log10_misfit']
+                nspr = out_dict['number_SP_amp_ratios']
+                useAmp = 'T'
+                mavg = "%5.2f" % out_dict['mavg']
+
+            #nppl = out_dict['number_P_polarities']
+            #npol = out_dict['station_polarity_count']
+            npol = out_dict['number_P_polarities']
+
+            quality = out_dict['quality'].decode('UTF-8')
+            rms_angle = out_dict['rms_angle']
+            #f.write("%d %3d %3d %3d %.1f %.1f %5.3f %5.3f %6.2f [Q: %s] %1s\n" % \
+            f.write("%d %s %3d %3d %3d  [%3d %3d %3d]    %.1f %.1f %5d %5.3f %6.2f %5d %5d %5s [Q: %s] %1s\n" % \
+                (icusp, out_dict['event_info'], int(strike), int(dip), int(rake),
+                int(s2), int(d2), int(r2),
+                magap, mpgap, stdr, misfit, rms_angle, npol, nspr, mavg, quality, useAmp) )
+
+    return
 
 
 from obspy.core.event.source import FocalMechanism, NodalPlanes, NodalPlane
@@ -675,9 +650,10 @@ def main():
     n = 2
     n = 3
     exs = Examples()
-    outputs = exs.run_example(n)
+    exs.run_example(n)
     outfile = 'mth_outputfile.%d' % n
-    write_outputs_to_file(outfile, outputs)
+    #exs.printout()
+    exs.printout(filename=outfile)
     exit()
 
    # if outputs is not None:

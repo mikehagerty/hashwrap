@@ -139,7 +139,8 @@ c normal vectors and the normal vectors of each mechanism
           temp1(j)=norm1in(j,i)
           temp2(j)=norm2in(j,i)
         end do
-        call MECH_ROT(norm1_avg,temp1,norm2_avg,temp2,rota)
+       !call MECH_ROT(norm1_avg,temp1,norm2_avg,temp2,rota)
+        call MECH_ROT(norm1_avg,temp1,norm2_avg,temp2,rota(i))
         d11=temp1(1)*norm1_avg(1)+temp1(2)*norm1_avg(2)+
      &                            temp1(3)*norm1_avg(3)
         d22=temp2(1)*norm2_avg(1)+temp2(2)*norm2_avg(2)+
