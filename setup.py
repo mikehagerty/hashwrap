@@ -22,6 +22,7 @@ import os
 #  numpy will fork and use the (more modern) setuptools
 import setuptools
 from numpy.distutils.core import setup, Extension
+#from setuptools import Extension, find_packages, setup
 
 # clean house
 from distutils.dir_util import remove_tree

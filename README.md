@@ -46,6 +46,12 @@ The easiest way is to install directly from either pypi or github:
 If you wish to change the default max array sizes (see above),
 you should set these vals in shell environment vars first.
 
+#### Install toml
+
+This needs to be installed before you install hashwrap
+
+    >pip install toml
+
 #### Install directly from pypi
 
     >pip install hashwrap
