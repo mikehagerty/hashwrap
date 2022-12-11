@@ -511,9 +511,10 @@ class Examples():
         events = None
         events_sp = None
         outputs = None
+        n = None
 
     def __repr__(self):
-        return '{0}'.format(self.__class_.__name__)
+        return '{0} n={1}'.format(self.__class__.__name__, self.n)
 
     def printout(self, maxrows=None, filename=None):
         return printout(self.outputs, maxrows, filename)
@@ -525,6 +526,8 @@ class Examples():
         if n not in [1,2,3]:
             logger.warning("hashwrapper.Examples.run_example(n=%s) --> n must be in [1,2,3]" % n)
             return None
+
+        self.n = n
 
         example_file = 'example%d.toml' % n
         toml_file = os.path.join(sample_dir, example_file)

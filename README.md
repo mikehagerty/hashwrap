@@ -25,21 +25,32 @@ default values indicated in hashwrap/fortran_arrays.toml:
 
 parameter(npick0=500, nmc0=500, nmax0=500, dang0=5.0, ncoor=31032)
 
-However, if you wish to override any of these values, you can do so
-by setting env vars *before* running pip install (below):
+If you clone the repo (see below), then you can edit fortran_arrays.toml
+directly to change the array sizes before you install.
+
+However, if you install directly without cloning, then you won't
+ever see the fortran_arrays.toml file.
+You can still modify them by setting env vars *before* running pip install, e.g.,
 
     >export npick0=500
     >export nmc0=500
     ...
     >export ncoor=31032
 
+The env vars will override the fortran_arrays.toml values.
 
 ### Installing
 
-The easiest way is to install directly from github:
+The easiest way is to install directly from either pypi or github:
 
 If you wish to change the default max array sizes (see above),
 you should set these vals in shell environment vars first.
+
+#### Install directly from pypi
+
+    >pip install hashwrap
+
+#### Or, Install from github
 
     >pip install git+https://github.com/mikehagerty/hashwrap.git
 

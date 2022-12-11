@@ -1,6 +1,21 @@
+# -*- coding: utf-8 -*-
+"""
+Python wrapper around HASH focalmech code,
+for use with AQMS db focalmech app
+
+:copyright:
+    Mike Hagerty (m.hagerty@isti.com), 2022
+:license:
+    GNU Lesser General Public License, Version 3
+    (https://www.gnu.org/copyleft/lesser.html)
+
+Originally forked from Mark Williams' HASHPy 2013
+"""
+
 #
 # setup.py file for compiling HASH and installing hashpy
 #
+
 import sys
 import os
 # By importing setuptools *before* numpy.distutils.core
@@ -16,6 +31,9 @@ shutil.rmtree('build', ignore_errors=True)
 libfile = 'hashwrap/libhashpy.cpython-39-darwin.so'
 if os.path.exists(libfile):
     os.remove(libfile)
+
+with open("version", "r") as f:
+    version = f.readline().strip()
 
 # MTH: 2020
 # As of numpy v1.23, building gives a warning that 
@@ -109,7 +127,7 @@ requirements = [
 setup(name='hashwrap',
       packages=['hashwrap'],
       #packages=setuptools.find_packages(),
-      version='0.0.2',
+      version=version,
       description='Routines for running HASH algorithms for earthquake focal mechanism',
       author='Mike Hagerty',
       author_email='m.hagerty@isti.com',
