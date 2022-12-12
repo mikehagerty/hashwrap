@@ -14,5 +14,4 @@ For use with AQMS db focalmech app (see aqms-pdl)
 Originally forked from Mark Williams' HASHPy 2013
 """
 
-with open("../version", "r") as f:
-    __version__ = f.readline().strip()
+__version__ = '0.0.4'
