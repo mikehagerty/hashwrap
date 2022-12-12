@@ -120,6 +120,7 @@ ext_args = {'sources': src_list,
             'extra_c_compile_args': ['-std=c99']}
 
 requirements = [
+    'obspy',
     'numpy',
     'matplotlib',
     'toml',
