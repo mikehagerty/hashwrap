@@ -126,11 +126,14 @@ requirements = [
     'toml',
 ]
 
+description='Wrapper for HASH v1.2 Hardebeck & Shearer Focal Mechanism Calculation Code'
+
 setup(name='hashwrap',
       packages=['hashwrap'],
       #packages=setuptools.find_packages(),
       version=version,
-      description='Routines for running HASH algorithms for earthquake focal mechanism',
+      description=description,
+      long_description=description,
       author='Mike Hagerty',
       author_email='m.hagerty@isti.com',
       url='https://github.com/mikehagerty/hashwrap',
