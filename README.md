@@ -35,6 +35,7 @@ You can still modify them by setting env vars *before* running pip install, e.g.
     >export npick0=500
     >export nmc0=500
     ...
+
     >export ncoor=31032
 
 The env vars will override the fortran_arrays.toml values.
