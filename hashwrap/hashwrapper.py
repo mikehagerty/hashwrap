@@ -646,6 +646,24 @@ from obspy.core.event.base import Comment
 import sys, os
 def main():
 
+    n = 1
+    base_dir = Path(__file__).parent
+    sample_dir = os.path.join(base_dir, 'sample')
+
+    example_file = 'example%d.toml' % n
+    toml_file = os.path.join(sample_dir, example_file)
+    settings = toml.load(toml_file)
+    plfile = os.path.join(sample_dir, settings['input_files']['plfile'])
+    fpfile = os.path.join(sample_dir, settings['input_files']['fpfile'])
+    delmax = settings['hash_parameters']['delmax']
+
+    if n == 1:
+        events = read_fpfit_file(fpfile=fpfile, plfile=plfile, delmax=delmax)
+        outputs = calc_focal_mechanisms(events, settings['hash_parameters'], phase_format='FPFIT')
+
+    print(outputs)
+    exit()
+
     #pathname = os.path.dirname(sys.argv[0])
     #print('path =', pathname)
     #print('full path =', os.path.abspath(pathname))
