@@ -33,7 +33,7 @@ libfile = 'hashwrap/libhashpy.cpython-39-darwin.so'
 if os.path.exists(libfile):
     os.remove(libfile)
 
-from hashwrap import __version__
+from hashwrap import __version__ as version
 
 # MTH: 2020
 # As of numpy v1.23, building gives a warning that 
